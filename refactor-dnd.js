@@ -1,0 +1,451 @@
+const fs = require('fs');
+
+const content = `import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import { useState } from "react";
+import { 
+  ArrowLeft, 
+  Settings, 
+  BookOpen, 
+  Eye, 
+  HelpCircle, 
+  Award, 
+  Save, 
+  Plus,
+  GripVertical,
+  Trash2,
+  Video,
+  FileText,
+  UploadCloud
+} from "lucide-react";
+import { Logo } from "@/components/ui/logo";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+
+export const Route = createFileRoute('/admin-course-builder/$courseId')({
+  component: AdminCourseBuilderPage,
+  loader: async ({ params }) => {
+    if (params.courseId === 'new') return null;
+    const { getCourseFn } = await import('../actions/courses');
+    return await getCourseFn({ data: { courseId: params.courseId } });
+  }
+});
+
+function AdminCourseBuilderPage() {
+  const { courseId } = Route.useParams();
+  const existingCourse = Route.useLoaderData();
+  const router = useRouter();
+
+  const [activeTab, setActiveTab] = useState<'details' | 'modules' | 'pricing' | 'visibility' | 'quiz' | 'certificate'>("details");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // State
+  const [courseTitle, setCourseTitle] = useState(existingCourse?.title || "New Course Title");
+  const [courseDescription, setCourseDescription] = useState(existingCourse?.description || "Description here...");
+  const [status, setStatus] = useState(existingCourse?.visibility || "draft");
+  const [category, setCategory] = useState(existingCourse?.category || "CODE");
+  const [author, setAuthor] = useState(existingCourse?.author || "Clinexcel Team");
+  const [bg, setBg] = useState(existingCourse?.bg || "bg-blue-50");
+  const [modules, setModules] = useState<any[]>(existingCourse?.modules || []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { createCourseFn, updateCourseFn } = await import('../actions/courses');
+      const payload = {
+        title: courseTitle,
+        description: courseDescription,
+        category,
+        author,
+        visibility: status,
+        bg,
+        modules
+      };
+
+      if (courseId === 'new') {
+        const res = await createCourseFn({ data: payload });
+        if (res.success) {
+          router.navigate({ to: '/admin-courses' });
+        }
+      } else {
+        const res = await updateCourseFn({ data: { courseId, updates: payload } });
+        if (res.success) {
+          router.invalidate();
+          alert("Saved successfully!");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error saving course");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (courseId === 'new') {
+      router.navigate({ to: '/admin-courses' });
+      return;
+    }
+    const { deleteCourseFn } = await import('../actions/courses');
+    if (confirm("Are you sure you want to delete this course?")) {
+      const res = await deleteCourseFn({ data: { courseId } });
+      if (res.success) {
+        router.navigate({ to: '/admin-courses' });
+      }
+    }
+  };
+
+  const addModule = () => {
+    setModules([...modules, { id: 'm' + Date.now(), title: "New Module", sections: [] }]);
+  };
+
+  const updateModuleTitle = (mIndex: number, title: string) => {
+    const newMods = [...modules];
+    newMods[mIndex].title = title;
+    setModules(newMods);
+  };
+
+  const deleteModule = (mIndex: number) => {
+    const newMods = [...modules];
+    newMods.splice(mIndex, 1);
+    setModules(newMods);
+  };
+
+  const addSection = (mIndex: number) => {
+    const newMods = [...modules];
+    newMods[mIndex].sections.push({ id: 's' + Date.now(), title: "New Section", type: "video", url: "" });
+    setModules(newMods);
+  };
+
+  const updateSection = (mIndex: number, sIndex: number, key: string, value: string) => {
+    const newMods = [...modules];
+    newMods[mIndex].sections[sIndex][key] = value;
+    setModules(newMods);
+  };
+
+  const deleteSection = (mIndex: number, sIndex: number) => {
+    const newMods = [...modules];
+    newMods[mIndex].sections.splice(sIndex, 1);
+    setModules(newMods);
+  };
+
+  const onDragEnd = (result: any) => {
+    const { destination, source, type } = result;
+
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    if (type === "module") {
+      const newMods = Array.from(modules);
+      const [moved] = newMods.splice(source.index, 1);
+      newMods.splice(destination.index, 0, moved);
+      setModules(newMods);
+      return;
+    }
+
+    if (type === "section") {
+      const sourceModuleId = source.droppableId;
+      const destModuleId = destination.droppableId;
+
+      const sourceModuleIndex = modules.findIndex(m => m.id === sourceModuleId);
+      const destModuleIndex = modules.findIndex(m => m.id === destModuleId);
+
+      const newMods = Array.from(modules);
+      const sourceSections = Array.from(newMods[sourceModuleIndex].sections);
+      
+      const [movedSection] = sourceSections.splice(source.index, 1);
+      newMods[sourceModuleIndex].sections = sourceSections;
+
+      if (sourceModuleId === destModuleId) {
+        sourceSections.splice(destination.index, 0, movedSection);
+      } else {
+        const destSections = Array.from(newMods[destModuleIndex].sections);
+        destSections.splice(destination.index, 0, movedSection);
+        newMods[destModuleIndex].sections = destSections;
+      }
+      
+      setModules(newMods);
+    }
+  };
+
+  return (
+    <div className="flex h-screen w-full flex-col bg-[#F8FAFC]">
+      {/* Top Header */}
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-6">
+        <div className="flex items-center gap-6">
+          <Link to="/admin-courses" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F1F5F9] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <ArrowLeft size={18} />
+          </Link>
+          <div className="h-6 w-px bg-border"></div>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-bold text-foreground">Course Builder</h1>
+            <span className="text-xs text-muted-foreground">Editing: {courseTitle}</span>
+          </div>
+          <div className={\`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full \${status === 'published' ? 'bg-success/10 text-success' : 'bg-orange-100 text-orange-600'}\`}>
+            {status}
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:bg-primary/90 disabled:opacity-50">
+            <Save size={16} /> {isSaving ? "Saving..." : "Save Changes"}
+          </button>
+          <div className="h-6 w-px bg-border"></div>
+          <Logo />
+        </div>
+      </header>
+
+      {/* Main Builder Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar - Tabs */}
+        <aside className="w-64 flex-col border-r border-border bg-white flex shrink-0">
+          <div className="p-4">
+            <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground pl-2">Configuration</h2>
+            <nav className="space-y-1">
+              <TabButton active={activeTab === "details"} onClick={() => setActiveTab("details")} icon={Settings} label="Course Details" />
+              <TabButton active={activeTab === "modules"} onClick={() => setActiveTab("modules")} icon={BookOpen} label="Modules & Sections" />
+              <TabButton active={activeTab === "quiz"} onClick={() => setActiveTab("quiz")} icon={HelpCircle} label="Quiz Builder" />
+              <TabButton active={activeTab === "certificate"} onClick={() => setActiveTab("certificate")} icon={Award} label="Certificate Config" />
+              <div className="my-4 h-px bg-border w-full" />
+              <TabButton active={activeTab === "visibility"} onClick={() => setActiveTab("visibility")} icon={Eye} label="Visibility & Danger" />
+            </nav>
+          </div>
+        </aside>
+
+        {/* Tab Content Area */}
+        <main className="flex-1 overflow-y-auto p-8 relative flex justify-center">
+          <div className="w-full max-w-4xl">
+            
+            {activeTab === "details" && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Course Details</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Manage the core information of this course.</p>
+                </div>
+                
+                <div className="space-y-6 bg-white p-8 rounded-2xl border border-border shadow-sm">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Course Title</label>
+                    <input 
+                      type="text" 
+                      value={courseTitle}
+                      onChange={(e) => setCourseTitle(e.target.value)}
+                      className="w-full rounded-xl border border-border bg-transparent p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Course Description</label>
+                    <textarea 
+                      rows={4}
+                      value={courseDescription}
+                      onChange={(e) => setCourseDescription(e.target.value)}
+                      className="w-full rounded-xl border border-border bg-transparent p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground">Category</label>
+                      <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-border bg-transparent p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="DESIGN">Design</option>
+                        <option value="CODE">Code</option>
+                        <option value="BUSINESS">Business</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground">Author</label>
+                      <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full rounded-xl border border-border bg-transparent p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Background Color (Thumbnail)</label>
+                    <select value={bg} onChange={(e) => setBg(e.target.value)} className="w-full rounded-xl border border-border bg-transparent p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                      <option value="bg-orange-100">Orange</option>
+                      <option value="bg-red-100">Red</option>
+                      <option value="bg-blue-400">Blue</option>
+                      <option value="bg-green-100">Green</option>
+                      <option value="bg-purple-100">Purple</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "modules" && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-foreground">Modules & Sections</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Build your curriculum by adding modules and content sections.</p>
+                  </div>
+                  <button onClick={addModule} className="flex items-center gap-2 rounded-full bg-blue-50 text-primary px-4 py-2 text-sm font-semibold transition-colors hover:bg-blue-100">
+                    <Plus size={16} /> Add Module
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-border shadow-sm p-2">
+                  <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="course-modules" type="module">
+                      {(provided) => (
+                        <div {...provided.droppableProps} ref={provided.innerRef}>
+                          <Accordion type="multiple" defaultValue={modules.map(m => m.id)} className="w-full">
+                            {modules.map((mod, mIndex) => (
+                              <Draggable key={mod.id} draggableId={mod.id} index={mIndex}>
+                                {(providedMod) => (
+                                  <div ref={providedMod.innerRef} {...providedMod.draggableProps}>
+                                    <AccordionItem value={mod.id} className="border-border px-4 py-2 border-b last:border-0">
+                                      <div className="flex items-center justify-between w-full">
+                                        <AccordionTrigger className="hover:no-underline text-foreground flex-1">
+                                          <div className="flex items-center gap-3">
+                                            <div {...providedMod.dragHandleProps} className="p-1 -ml-1 text-muted-foreground hover:bg-muted rounded cursor-grab">
+                                              <GripVertical size={16} />
+                                            </div>
+                                            <span className="font-bold">Module {mIndex + 1}</span>
+                                          </div>
+                                        </AccordionTrigger>
+                                        <input 
+                                          className="font-bold border border-border rounded px-2 py-1 flex-1 mx-4" 
+                                          value={mod.title} 
+                                          onChange={(e) => updateModuleTitle(mIndex, e.target.value)} 
+                                          onClick={(e) => e.stopPropagation()} 
+                                        />
+                                        <button onClick={() => deleteModule(mIndex)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
+                                      </div>
+                                      <AccordionContent className="pt-4 pb-6">
+                                        <div className="space-y-4 pl-7 pr-2">
+                                          <Droppable droppableId={mod.id} type="section">
+                                            {(providedSecList) => (
+                                              <div {...providedSecList.droppableProps} ref={providedSecList.innerRef} className="space-y-4">
+                                                {mod.sections?.map((sec: any, sIndex: number) => (
+                                                  <Draggable key={sec.id} draggableId={sec.id} index={sIndex}>
+                                                    {(providedSec) => (
+                                                      <div 
+                                                        ref={providedSec.innerRef} 
+                                                        {...providedSec.draggableProps} 
+                                                        className="border border-border rounded-xl p-4 bg-[#F8FAFC]"
+                                                      >
+                                                        <div className="flex items-center justify-between mb-4">
+                                                          <div className="flex items-center gap-3 flex-1">
+                                                            <div {...providedSec.dragHandleProps} className="p-1 -ml-1 text-muted-foreground hover:bg-muted rounded cursor-grab">
+                                                              <GripVertical size={14} />
+                                                            </div>
+                                                            <select 
+                                                              value={sec.type} 
+                                                              onChange={(e) => updateSection(mIndex, sIndex, 'type', e.target.value)}
+                                                              className="border border-border rounded p-1 text-xs"
+                                                            >
+                                                              <option value="video">Video</option>
+                                                              <option value="pdf">PDF</option>
+                                                              <option value="quiz">Quiz</option>
+                                                            </select>
+                                                            <input 
+                                                              className="font-semibold text-sm flex-1 border border-border rounded px-2 py-1" 
+                                                              value={sec.title} 
+                                                              onChange={(e) => updateSection(mIndex, sIndex, 'title', e.target.value)}
+                                                            />
+                                                          </div>
+                                                          <button onClick={() => deleteSection(mIndex, sIndex)} className="text-muted-foreground hover:text-red-500 transition-colors ml-4"><Trash2 size={14} /></button>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                          <label className="text-xs font-bold text-foreground">Content URL (YouTube / PDF link)</label>
+                                                          <input 
+                                                            type="text" 
+                                                            value={sec.url || ""}
+                                                            onChange={(e) => updateSection(mIndex, sIndex, 'url', e.target.value)}
+                                                            className="w-full rounded-lg border border-border bg-white p-2.5 text-sm focus:border-primary focus:outline-none"
+                                                            placeholder="https://..."
+                                                          />
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                  </Draggable>
+                                                ))}
+                                                {providedSecList.placeholder}
+                                              </div>
+                                            )}
+                                          </Droppable>
+
+                                          <button onClick={() => addSection(mIndex)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-white py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                            <Plus size={16} /> Add Section
+                                          </button>
+                                        </div>
+                                      </AccordionContent>
+                                    </AccordionItem>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                            {modules.length === 0 && <div className="p-4 text-center text-muted-foreground text-sm">No modules added yet.</div>}
+                          </Accordion>
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "visibility" && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Visibility & Danger Zone</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Control who can see this course, or permanently delete it.</p>
+                </div>
+                
+                <div className="space-y-6 bg-white p-8 rounded-2xl border border-border shadow-sm">
+                  <div className="space-y-3">
+                    <label className="text-sm font-bold text-foreground">Publish Status</label>
+                    <div className="flex gap-4">
+                      <button onClick={() => setStatus('draft')} className={\`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all \${status === 'draft' ? 'border-primary bg-blue-50 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}\`}>Draft</button>
+                      <button onClick={() => setStatus('hidden')} className={\`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all \${status === 'hidden' ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-border text-muted-foreground hover:bg-muted'}\`}>Hidden</button>
+                      <button onClick={() => setStatus('published')} className={\`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all \${status === 'published' ? 'border-success bg-success/10 text-success' : 'border-border text-muted-foreground hover:bg-muted'}\`}>Published</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6 bg-red-50 p-8 rounded-2xl border border-red-100 shadow-sm">
+                  <div>
+                    <h3 className="text-lg font-bold text-red-600 mb-1">Delete Course</h3>
+                    <p className="text-sm text-red-600/80 mb-4">Once you delete a course, there is no going back. Please be certain.</p>
+                    <button onClick={handleDelete} className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90">
+                      Delete Course
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {(activeTab === "quiz" || activeTab === "certificate") && (
+              <div className="flex h-[60vh] flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white rounded-2xl border border-border shadow-sm">
+                <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-[#F1F5F9] text-muted-foreground">
+                  {activeTab === "quiz" ? <HelpCircle size={48} /> : <Award size={48} />}
+                </div>
+                <h3 className="mb-2 text-2xl font-bold text-foreground">
+                  {activeTab === "quiz" ? "Quiz Builder" : "Certificate Configuration"}
+                </h3>
+              </div>
+            )}
+
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function TabButton({ icon: Icon, label, active, onClick }: { icon: any; label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={\`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors \${
+        active
+          ? "bg-blue-50 text-primary font-semibold"
+          : "text-muted-foreground hover:bg-[#F1F5F9] hover:text-foreground"
+      }\`}
+    >
+      <Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
+      {label}
+    </button>
+  );
+}
+`;
+fs.writeFileSync('src/routes/admin-course-builder.$courseId.tsx', content);
