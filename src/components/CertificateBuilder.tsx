@@ -17,12 +17,12 @@ export function CertificateBuilder({ certificate, course, onChange, onSave, isSa
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-6xl mx-auto pb-12">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Certificate Builder</h2>
-          <p className="text-sm text-muted-foreground mt-1">Design the digital certificate awarded upon course completion.</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">Certificate Builder</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Design the digital certificate awarded upon course completion.</p>
         </div>
-        <button onClick={onSave} disabled={isSaving} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:bg-primary/90 disabled:opacity-50">
+        <button onClick={onSave} disabled={isSaving} className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:bg-primary/90 disabled:opacity-50 w-full sm:w-auto">
           <Save size={16} /> {isSaving ? "Saving..." : "Save Certificate"}
         </button>
       </div>
@@ -60,10 +60,10 @@ export function CertificateBuilder({ certificate, course, onChange, onSave, isSa
         </div>
 
         <div className="col-span-12 lg:col-span-8">
-          <div className="bg-white p-8 rounded-3xl border border-border shadow-lg overflow-hidden flex items-center justify-center min-h-[600px] relative bg-grid-slate-100">
+          <div className="bg-white p-4 sm:p-8 rounded-3xl border border-border shadow-lg overflow-x-auto flex items-center justify-start lg:justify-center min-h-[500px] lg:min-h-[600px] relative bg-grid-slate-100">
             {/* Live Preview Certificate */}
             <div 
-              className="w-full max-w-[800px] aspect-[1.414/1] bg-white relative shadow-2xl overflow-hidden p-12 flex flex-col items-center justify-between"
+              className="min-w-[650px] lg:min-w-0 w-full max-w-[800px] aspect-[1.414/1] bg-white relative shadow-2xl overflow-hidden p-8 sm:p-12 flex flex-col items-center justify-between mx-auto shrink-0"
               style={{ border: `1px solid ${currentCert.themeColor}30` }}
             >
               {/* Decorative Elements */}

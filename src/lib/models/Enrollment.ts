@@ -6,6 +6,8 @@ export interface IEnrollment extends Document {
   completedSections: string[];
   viewedSections: string[];
   enrolledAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const EnrollmentSchema: Schema<IEnrollment> = new Schema(

@@ -166,9 +166,12 @@ export const getStudentCourseDataFn = createServerFn({ method: "GET" })
         throw new Error("Not Enrolled");
       }
 
-      const quizAttempt = await QuizAttempt.findOne({
+      const hasFinalQuiz = !!(course.quiz?.questions && course.quiz.questions.length > 0);
+
+      const finalQuizAttempt = await QuizAttempt.findOne({
         studentId: session.userId,
         courseId: data.courseId,
+        sectionId: "final-quiz",
         status: "passed"
       }).lean();
 
@@ -176,13 +179,28 @@ export const getStudentCourseDataFn = createServerFn({ method: "GET" })
       
       const processedCourse = await generatePresignedUrlsForCourse(course);
 
+      const allSectionIds: string[] = [];
+      course.modules?.forEach((m: any) => {
+        m.sections?.forEach((s: any) => {
+          allSectionIds.push(s._id?.toString() || s.id);
+        });
+      });
+      const allSectionsCompleted = allSectionIds.length > 0 && allSectionIds.every(id => 
+        enrollment?.completedSections?.includes(id)
+      );
+
+      const isCompleted = hasFinalQuiz ? !!finalQuizAttempt : allSectionsCompleted;
+
       return {
         course: JSON.parse(JSON.stringify(processedCourse)),
         completedSections: enrollment?.completedSections || [],
         viewedSections: enrollment?.viewedSections || [],
-        quizPassed: !!quizAttempt,
+        quizPassed: !!finalQuizAttempt,
+        isCompleted,
         studentName: user?.name || "Student",
-        completedAt: quizAttempt?.completedAt ? quizAttempt.completedAt.toISOString() : null
+        completedAt: finalQuizAttempt?.completedAt 
+          ? finalQuizAttempt.completedAt.toISOString() 
+          : (!hasFinalQuiz && allSectionsCompleted && enrollment?.updatedAt ? new Date(enrollment.updatedAt).toISOString() : null)
       };
     } catch (error: any) {
       console.error("Error fetching student course data:", error);
@@ -312,14 +330,39 @@ export const downloadSecureCertificateFn = createServerFn({ method: "GET" })
       const course = await Course.findOne({ courseId: data.courseId }).lean();
       if (!course) throw new Error("Course not found");
 
-      const quizAttempt = await QuizAttempt.findOne({
+      const hasFinalQuiz = !!(course.quiz?.questions && course.quiz.questions.length > 0);
+
+      const finalQuizAttempt = await QuizAttempt.findOne({
         studentId: targetStudentId,
         courseId: data.courseId,
+        sectionId: "final-quiz",
         status: "passed"
       }).lean();
 
-      if (!quizAttempt && session.role !== "admin") {
-        throw new Error("You have not passed the final quiz yet.");
+      if (session.role !== "admin") {
+        const enrollment = await Enrollment.findOne({
+          studentId: targetStudentId,
+          courseId: data.courseId
+        }).lean();
+
+        const allSectionIds: string[] = [];
+        course.modules?.forEach((m: any) => {
+          m.sections?.forEach((s: any) => {
+            allSectionIds.push(s._id?.toString() || s.id);
+          });
+        });
+
+        const completedAllSections = allSectionIds.length > 0 && allSectionIds.every(id => 
+          enrollment?.completedSections?.includes(id)
+        );
+
+        if (!completedAllSections) {
+          throw new Error("You must complete all course modules before obtaining your certificate.");
+        }
+
+        if (hasFinalQuiz && !finalQuizAttempt) {
+          throw new Error("You have not passed the final quiz yet.");
+        }
       }
 
       const user = await User.findById(targetStudentId).lean();
@@ -332,8 +375,8 @@ export const downloadSecureCertificateFn = createServerFn({ method: "GET" })
         institutionName: "Clinexcel Academy"
       };
 
-      const dateStr = quizAttempt?.completedAt 
-        ? new Date(quizAttempt.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      const dateStr = finalQuizAttempt?.completedAt 
+        ? new Date(finalQuizAttempt.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
         : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
       // Generate HTML matching the React component exactly
@@ -411,28 +454,7 @@ export const downloadSecureCertificateFn = createServerFn({ method: "GET" })
 </html>
       `;
 
-      // Use Puppeteer to generate a 1:1 PDF
-      const puppeteer = (await import('puppeteer')).default || await import('puppeteer');
-      const browser = await puppeteer.launch({ headless: true });
-      const page = await browser.newPage();
-      
-      // Set content and wait for Tailwind to process
-      await page.setContent(htmlContent, { waitUntil: 'load' });
-      await page.waitForNetworkIdle({ idleTime: 500 });
-      
-      // Generate PDF exactly at 800x566 matching the frontend UI scale
-      const pdfBuffer = await page.pdf({
-        width: '800px',
-        height: '566px',
-        printBackground: true,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 }
-      });
-
-      await browser.close();
-
-      const base64 = Buffer.from(pdfBuffer).toString('base64');
-
-      return { base64, filename: `Certificate_${course.title.replace(/\s+/g, '_')}.pdf` };
+      return { html: htmlContent, filename: `Certificate_${course.title.replace(/\s+/g, '_')}.pdf` };
     } catch (error: any) {
       console.error("Error generating PDF certificate:", error);
       throw new Error(error.message);

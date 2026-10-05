@@ -107,12 +107,18 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith("/admin");
+  const pathname = location?.pathname || "";
+  const hideFloater = 
+    pathname.startsWith("/admin") || 
+    pathname.startsWith("/dashboard") || 
+    pathname.startsWith("/student-courses") || 
+    pathname.startsWith("/transcript") || 
+    pathname.startsWith("/course");
 
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      {!isAdmin && <WhatsAppFloater />}
+      {!hideFloater && <WhatsAppFloater />}
     </QueryClientProvider>
   );
 }

@@ -117,19 +117,21 @@ export const getStudentProfileFn = createServerFn({ method: "GET" })
           }
         });
 
-        if (completedModules > 0 && completedModules < totalModules) status = 'in_progress';
-        if (completedModules === totalModules && totalModules > 0) status = 'completed';
+        const hasFinalQuiz = !!(course.quiz?.questions && course.quiz.questions.length > 0);
+        const allModulesCompleted = completedModules === totalModules && totalModules > 0;
 
         const QuizAttempt = (await import("../lib/models/QuizAttempt")).QuizAttempt;
         const passedAttempt = await QuizAttempt?.findOne({
           studentId: student._id.toString(),
           courseId: course.courseId,
+          sectionId: "final-quiz",
           status: "passed"
         }).lean();
         
         const latestAttempt = await QuizAttempt?.findOne({
           studentId: student._id.toString(),
-          courseId: course.courseId
+          courseId: course.courseId,
+          sectionId: "final-quiz"
         }).sort({ createdAt: -1 }).lean();
 
         const activeAttempt = passedAttempt || latestAttempt;
@@ -137,6 +139,16 @@ export const getStudentProfileFn = createServerFn({ method: "GET" })
         if (activeAttempt?.score !== undefined) {
           scoreDisplay = `${Math.round(activeAttempt.score / 10)}/10`;
         }
+
+        if (hasFinalQuiz) {
+          status = passedAttempt ? 'completed' : (completedCount > 0 || activeAttempt ? 'in_progress' : 'not_started');
+        } else {
+          status = allModulesCompleted ? 'completed' : (completedCount > 0 ? 'in_progress' : 'not_started');
+        }
+
+        const completedDate = hasFinalQuiz 
+          ? (passedAttempt?.completedAt ? new Date(passedAttempt.completedAt).toLocaleDateString() : null)
+          : (allModulesCompleted && e.updatedAt ? new Date(e.updatedAt).toLocaleDateString() : null);
 
         enrolledCoursesList.push({
           courseId: course.courseId,
@@ -150,7 +162,7 @@ export const getStudentProfileFn = createServerFn({ method: "GET" })
           status,
           percentage: totalModules === 0 ? 0 : Math.round((completedModules / totalModules) * 100),
           enrolledAt: e.enrolledAt ? new Date(e.enrolledAt).toLocaleDateString() : 'N/A',
-          completedAt: passedAttempt?.completedAt ? new Date(passedAttempt.completedAt).toLocaleDateString() : null,
+          completedAt: completedDate,
           score: scoreDisplay
         });
       }
@@ -281,7 +293,10 @@ export const downloadTranscriptFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     try {
       const session = await getAuthSessionFn();
-      if (!session || session.role !== "admin") throw new Error("Forbidden");
+      if (!session) throw new Error("Unauthorized");
+      if (session.role !== "admin" && session.userId !== data.studentId) {
+        throw new Error("Forbidden");
+      }
 
       await connectDB();
       const student = await User.findById(data.studentId).lean();
@@ -341,23 +356,7 @@ export const downloadTranscriptFn = createServerFn({ method: "POST" })
 </html>
       `;
 
-      const puppeteer = (await import('puppeteer')).default || await import('puppeteer');
-      const browser = await puppeteer.launch({ headless: true });
-      const page = await browser.newPage();
-      
-      await page.setContent(htmlContent, { waitUntil: 'load' });
-      await page.waitForNetworkIdle({ idleTime: 500 });
-      
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: { top: '40px', right: '40px', bottom: '40px', left: '40px' }
-      });
-
-      await browser.close();
-
-      const base64 = Buffer.from(pdfBuffer).toString('base64');
-      return { base64, filename: `Transcript_${student.name.replace(/\s+/g, '_')}.pdf` };
+      return { html: htmlContent, filename: `Transcript_${student.name.replace(/\s+/g, '_')}.pdf` };
     } catch (error: any) {
       console.error("Error generating transcript:", error);
       throw new Error(error.message);

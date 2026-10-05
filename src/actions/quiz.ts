@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { connectDB } from "../lib/db";
 import { QuizAttempt } from "../lib/models/QuizAttempt";
 import { Course } from "../lib/models/Course";
+import { Enrollment } from "../lib/models/Enrollment";
 import { getAuthSessionFn } from "../lib/auth";
 
 export const getQuizAttemptFn = createServerFn({ method: "GET" })
@@ -42,6 +43,28 @@ export const startQuizFn = createServerFn({ method: "POST" })
       let targetQuizConfig = null;
       if (sId === "final-quiz") {
         targetQuizConfig = course.quiz;
+
+        if (session.role !== "admin") {
+          const enrollment = await Enrollment.findOne({
+            studentId: session.userId,
+            courseId: data.courseId
+          }).lean();
+
+          const allSectionIds: string[] = [];
+          course.modules?.forEach((m: any) => {
+            m.sections?.forEach((s: any) => {
+              allSectionIds.push(s._id?.toString() || s.id);
+            });
+          });
+
+          const completedAll = allSectionIds.length > 0 && allSectionIds.every(id => 
+            enrollment?.completedSections?.includes(id)
+          );
+
+          if (!completedAll) {
+            throw new Error("You must complete all course modules before taking the final quiz.");
+          }
+        }
       } else {
         // Find the module section quiz
         for (const mod of course.modules || []) {

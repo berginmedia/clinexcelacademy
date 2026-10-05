@@ -241,33 +241,42 @@ function AdminCourseBuilderPage() {
   return (
     <div className="flex h-screen w-full flex-col bg-[#F8FAFC]">
       {/* Top Header */}
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-6">
-        <div className="flex items-center gap-6">
-          <Link to="/admin-courses" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F1F5F9] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-4 sm:px-6">
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+          <Link to="/admin-courses" className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
             <ArrowLeft size={18} />
           </Link>
-          <div className="h-6 w-px bg-border"></div>
-          <div className="flex flex-col">
-            <h1 className="text-lg font-bold text-foreground">Course Builder</h1>
-            <span className="text-xs text-muted-foreground">Editing: {courseTitle}</span>
+          <div className="h-6 w-px bg-border shrink-0"></div>
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-base sm:text-lg font-bold text-foreground truncate">Course Builder</h1>
+            <span className="text-[11px] sm:text-xs text-muted-foreground truncate">Editing: {courseTitle}</span>
           </div>
-          <div className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${status === 'published' ? 'bg-success/10 text-success' : 'bg-orange-100 text-orange-600'}`}>
+          <div className={`hidden sm:inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full shrink-0 ${status === 'published' ? 'bg-success/10 text-success' : 'bg-orange-100 text-orange-600'}`}>
             {status}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:bg-primary/90 disabled:opacity-50">
-            <Save size={16} /> {isSaving ? "Saving..." : "Save Changes"}
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-primary px-3.5 sm:px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition-opacity hover:bg-primary/90 disabled:opacity-50">
+            <Save size={16} /> <span>{isSaving ? "Saving..." : "Save"}</span>
           </button>
-          <div className="h-6 w-px bg-border"></div>
-          <Logo />
+          <div className="hidden sm:block h-6 w-px bg-border"></div>
+          <div className="hidden sm:block"><Logo /></div>
         </div>
       </header>
 
+      {/* Mobile/Tablet Horizontal Tabs */}
+      <div className="flex lg:hidden overflow-x-auto border-b border-border bg-white p-2.5 gap-2 shrink-0">
+        <MobileTabPill active={activeTab === "details"} onClick={() => setActiveTab("details")} icon={Settings} label="Details" />
+        <MobileTabPill active={activeTab === "modules" || activeTab.startsWith("quiz-")} onClick={() => setActiveTab("modules")} icon={BookOpen} label="Modules" />
+        <MobileTabPill active={activeTab === "quiz"} onClick={() => setActiveTab("quiz")} icon={HelpCircle} label="Quiz" />
+        <MobileTabPill active={activeTab === "certificate"} onClick={() => setActiveTab("certificate")} icon={Award} label="Certificate" />
+        <MobileTabPill active={activeTab === "visibility"} onClick={() => setActiveTab("visibility")} icon={Eye} label="Visibility" />
+      </div>
+
       {/* Main Builder Area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Tabs */}
-        <aside className="w-64 flex-col border-r border-border bg-white flex shrink-0">
+        {/* Left Sidebar - Tabs (Desktop Only) */}
+        <aside className="w-64 flex-col border-r border-border bg-white hidden lg:flex shrink-0">
           <div className="p-4">
             <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground pl-2">Configuration</h2>
             <nav className="space-y-1">
@@ -282,22 +291,22 @@ function AdminCourseBuilderPage() {
         </aside>
 
         {/* Tab Content Area */}
-        <main className="flex-1 overflow-y-auto p-8 relative flex justify-center">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8 relative flex justify-center">
           <div className="w-full max-w-4xl">
             
             {activeTab === "details" && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">Course Details</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Manage the core information of this course.</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Course Details</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage the core information of this course.</p>
                 </div>
                 
-                <div className="space-y-6 bg-white p-8 rounded-2xl border border-border shadow-sm">
+                <div className="space-y-6 bg-white p-5 sm:p-8 rounded-2xl border border-border shadow-sm">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-foreground">Course Title</label>
                     <input 
                       type="text" 
-                      value={courseTitle}
+                      value={courseTitle} 
                       onChange={(e) => setCourseTitle(e.target.value)}
                       className="w-full rounded-xl border border-border bg-transparent p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
@@ -311,7 +320,7 @@ function AdminCourseBuilderPage() {
                       className="w-full rounded-xl border border-border bg-transparent p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-foreground">Category</label>
                       <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-border bg-transparent p-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
@@ -340,18 +349,18 @@ function AdminCourseBuilderPage() {
             )}
 
             {activeTab === "modules" && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex items-center justify-between">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-foreground">Modules & Sections</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Build your curriculum by adding modules and content sections.</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">Modules & Sections</h2>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Build your curriculum by adding modules and content sections.</p>
                   </div>
-                  <button onClick={addModule} className="flex items-center gap-2 rounded-full bg-blue-50 text-primary px-4 py-2 text-sm font-semibold transition-colors hover:bg-blue-100">
+                  <button onClick={addModule} className="flex items-center justify-center gap-2 rounded-full bg-blue-50 text-primary px-4 py-2 text-sm font-semibold transition-colors hover:bg-blue-100 w-full sm:w-auto">
                     <Plus size={16} /> Add Module
                   </button>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-border shadow-sm p-2">
+                <div className="bg-white rounded-2xl border border-border shadow-sm p-2 sm:p-3">
                   <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="course-modules" type="module">
                       {(provided) => (
@@ -361,32 +370,45 @@ function AdminCourseBuilderPage() {
                               <Draggable key={mod.id} draggableId={mod.id} index={mIndex}>
                                 {(providedMod) => (
                                   <div ref={providedMod.innerRef} {...providedMod.draggableProps}>
-                                    <AccordionItem value={mod.id} className="border-border px-4 py-2 border-b last:border-0 bg-white">
-                                      <div className="flex items-center justify-between w-full">
-                                        <AccordionTrigger className="hover:no-underline text-foreground flex-1" onClick={(e) => {
-                                          // Ensure drag handle doesn't trigger accordion open if clicked on
-                                          if ((e.target as HTMLElement).closest('.drag-handle')) {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                          }
-                                        }}>
-                                          <div className="flex items-center gap-3">
-                                            <div {...providedMod.dragHandleProps} className="drag-handle p-1 -ml-1 text-muted-foreground hover:bg-muted rounded cursor-grab">
-                                              <GripVertical size={16} />
+                                    <AccordionItem value={mod.id} className="border-border px-3 sm:px-4 py-2 border-b last:border-0 bg-white">
+                                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2 sm:gap-0">
+                                        <div className="flex items-center justify-between w-full sm:w-auto">
+                                          <AccordionTrigger className="hover:no-underline text-foreground py-2 sm:py-4 flex-1 sm:flex-initial" onClick={(e) => {
+                                            // Ensure drag handle doesn't trigger accordion open if clicked on
+                                            if ((e.target as HTMLElement).closest('.drag-handle')) {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                            }
+                                          }}>
+                                            <div className="flex items-center gap-2 sm:gap-3">
+                                              <div {...providedMod.dragHandleProps} className="drag-handle p-1 -ml-1 text-muted-foreground hover:bg-muted rounded cursor-grab">
+                                                <GripVertical size={16} />
+                                              </div>
+                                              <span className="font-bold text-sm sm:text-base whitespace-nowrap">Module {mIndex + 1}</span>
                                             </div>
-                                            <span className="font-bold">Module {mIndex + 1}</span>
-                                          </div>
-                                        </AccordionTrigger>
-                                        <input 
-                                          className="font-bold border border-border rounded px-2 py-1 flex-1 mx-4 bg-transparent" 
-                                          value={mod.title} 
-                                          onChange={(e) => updateModuleTitle(mIndex, e.target.value)} 
-                                          onClick={(e) => e.stopPropagation()} 
-                                        />
-                                        <button onClick={() => deleteModule(mIndex)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
+                                          </AccordionTrigger>
+                                          <button onClick={() => deleteModule(mIndex)} className="sm:hidden p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0">
+                                            <Trash2 size={16} />
+                                          </button>
+                                        </div>
+                                        
+                                        <div className="flex items-center flex-1 w-full sm:w-auto sm:mx-4">
+                                          <input 
+                                            className="font-bold text-sm sm:text-base border border-border rounded-lg px-3 py-1.5 flex-1 bg-[#F8FAFC] sm:bg-transparent w-full" 
+                                            placeholder="Module title..."
+                                            value={mod.title} 
+                                            onChange={(e) => updateModuleTitle(mIndex, e.target.value)} 
+                                            onClick={(e) => e.stopPropagation()} 
+                                          />
+                                        </div>
+
+                                        <button onClick={() => deleteModule(mIndex)} className="hidden sm:block p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0">
+                                          <Trash2 size={16} />
+                                        </button>
                                       </div>
-                                      <AccordionContent className="pt-4 pb-6">
-                                        <div className="space-y-4 pl-7 pr-2">
+                                      
+                                      <AccordionContent className="pt-2 sm:pt-4 pb-4 sm:pb-6">
+                                        <div className="space-y-4 pl-0 sm:pl-7 pr-0 sm:pr-2">
                                           <Droppable droppableId={mod.id} type="section">
                                             {(providedSecList) => (
                                               <div {...providedSecList.droppableProps} ref={providedSecList.innerRef} className="space-y-4 min-h-[50px]">
@@ -396,40 +418,53 @@ function AdminCourseBuilderPage() {
                                                       <div 
                                                         ref={providedSec.innerRef} 
                                                         {...providedSec.draggableProps} 
-                                                        className="border border-border rounded-xl p-4 bg-[#F8FAFC]"
+                                                        className="border border-border rounded-xl p-3 sm:p-4 bg-[#F8FAFC]"
                                                       >
-                                                        <div className="flex items-center justify-between mb-4">
-                                                          <div className="flex items-center gap-3 flex-1">
-                                                            <div {...providedSec.dragHandleProps} className="p-1 -ml-1 text-muted-foreground hover:bg-muted rounded cursor-grab">
-                                                              <GripVertical size={14} />
+                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 mb-4">
+                                                          <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 w-full sm:w-auto">
+                                                            <div className="flex items-center gap-2">
+                                                              <div {...providedSec.dragHandleProps} className="p-1 -ml-1 text-muted-foreground hover:bg-muted rounded cursor-grab">
+                                                                <GripVertical size={14} />
+                                                              </div>
+                                                              <select 
+                                                                value={sec.type} 
+                                                                onChange={(e) => updateSection(mIndex, sIndex, 'type', e.target.value)}
+                                                                className="border border-border rounded-lg p-1.5 text-xs font-semibold bg-white cursor-pointer"
+                                                              >
+                                                                <option value="video">Video</option>
+                                                                <option value="pdf">PDF</option>
+                                                                <option value="quiz">Quiz</option>
+                                                              </select>
                                                             </div>
-                                                            <select 
-                                                              value={sec.type} 
-                                                              onChange={(e) => updateSection(mIndex, sIndex, 'type', e.target.value)}
-                                                              className="border border-border rounded p-1 text-xs bg-transparent"
-                                                            >
-                                                              <option value="video">Video</option>
-                                                              <option value="pdf">PDF</option>
-                                                              <option value="quiz">Quiz</option>
-                                                            </select>
+                                                            <button onClick={() => deleteSection(mIndex, sIndex)} className="sm:hidden text-muted-foreground hover:text-red-500 transition-colors p-1">
+                                                              <Trash2 size={15} />
+                                                            </button>
+                                                          </div>
+                                                          
+                                                          <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
                                                             <input 
-                                                              className="font-semibold text-sm flex-1 border border-border rounded px-2 py-1 bg-transparent" 
+                                                              className="font-semibold text-sm flex-1 border border-border rounded-lg px-2.5 py-1.5 bg-white sm:bg-transparent w-full" 
+                                                              placeholder="Section title..."
                                                               value={sec.title} 
                                                               onChange={(e) => updateSection(mIndex, sIndex, 'title', e.target.value)}
                                                             />
                                                           </div>
-                                                          <button onClick={() => deleteSection(mIndex, sIndex)} className="text-muted-foreground hover:text-red-500 transition-colors ml-4"><Trash2 size={14} /></button>
+
+                                                          <button onClick={() => deleteSection(mIndex, sIndex)} className="hidden sm:block text-muted-foreground hover:text-red-500 transition-colors ml-2 sm:ml-4 shrink-0">
+                                                            <Trash2 size={14} />
+                                                          </button>
                                                         </div>
+
                                                         <div className="space-y-2">
                                                           {sec.type === 'quiz' ? (
-                                                            <div className="flex items-center gap-4 border-2 border-dashed border-border rounded-lg p-6 bg-white">
+                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-2 border-dashed border-border rounded-xl p-4 sm:p-6 bg-white">
                                                               <div className="flex-1">
                                                                 <label className="text-sm font-bold text-foreground block mb-1">Module Quiz</label>
                                                                 <p className="text-xs text-muted-foreground">Configure the questions for this quiz module.</p>
                                                               </div>
                                                               <button 
                                                                 onClick={() => setActiveTab(`quiz-${mIndex}-${sIndex}`)}
-                                                                className="rounded-xl bg-blue-50 text-blue-600 px-6 py-2.5 text-sm font-bold transition-colors hover:bg-blue-100 border border-blue-200"
+                                                                className="rounded-xl bg-blue-50 text-blue-600 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-bold transition-colors hover:bg-blue-100 border border-blue-200 text-center w-full sm:w-auto"
                                                               >
                                                                 Configure Quiz
                                                               </button>
@@ -446,32 +481,34 @@ function AdminCourseBuilderPage() {
                                                                   <p className="text-xs text-muted-foreground mt-2 text-center">Uploading... {uploadingSections[`${mIndex}-${sIndex}`]}%</p>
                                                                 </div>
                                                               ) : sec.url ? (
-                                                                <div className="flex items-center gap-2">
-                                                                  <div className="flex-1 flex items-center gap-2 text-sm text-success font-medium border border-success/30 bg-success/5 p-2.5 rounded-lg">
-                                                                    <CheckCircle2 size={16} />
-                                                                    {sec.type === 'video' ? 'Video File Attached' : 'PDF Document Attached'}
+                                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-2">
+                                                                  <div className="flex-1 flex items-center gap-2 text-xs sm:text-sm text-success font-medium border border-success/30 bg-success/5 p-2.5 rounded-lg">
+                                                                    <CheckCircle2 size={16} className="shrink-0" />
+                                                                    <span className="truncate">{sec.type === 'video' ? 'Video File Attached' : 'PDF Document Attached'}</span>
                                                                   </div>
-                                                                  <button 
-                                                                    onClick={() => handlePreview(sec.url)}
-                                                                    className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-semibold px-4 py-2.5 rounded-lg border border-blue-200 transition-colors"
-                                                                  >
-                                                                    <Eye size={16} /> View
-                                                                  </button>
-                                                                  <label className="cursor-pointer bg-muted hover:bg-muted/80 text-foreground text-sm font-semibold px-4 py-2.5 rounded-lg border border-border transition-colors">
-                                                                    Replace
-                                                                    <input 
-                                                                      type="file" 
-                                                                      className="hidden" 
-                                                                      accept={sec.type === 'video' ? 'video/*' : 'application/pdf'}
-                                                                      onChange={(e) => e.target.files?.[0] && handleFileUpload(mIndex, sIndex, e.target.files[0])}
-                                                                    />
-                                                                  </label>
+                                                                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                                                                    <button 
+                                                                      onClick={() => handlePreview(sec.url)}
+                                                                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-blue-200 transition-colors"
+                                                                    >
+                                                                      <Eye size={15} /> View
+                                                                    </button>
+                                                                    <label className="flex-1 sm:flex-initial flex items-center justify-center cursor-pointer bg-muted hover:bg-muted/80 text-foreground text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-border transition-colors">
+                                                                      Replace
+                                                                      <input 
+                                                                        type="file" 
+                                                                        className="hidden" 
+                                                                        accept={sec.type === 'video' ? 'video/*' : 'application/pdf'}
+                                                                        onChange={(e) => e.target.files?.[0] && handleFileUpload(mIndex, sIndex, e.target.files[0])}
+                                                                      />
+                                                                    </label>
+                                                                  </div>
                                                                 </div>
                                                               ) : (
-                                                                <label className="cursor-pointer flex items-center justify-center w-full border-2 border-dashed border-border rounded-lg p-6 bg-white hover:bg-muted/50 transition-colors">
-                                                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                                                <label className="cursor-pointer flex items-center justify-center w-full border-2 border-dashed border-border rounded-xl p-4 sm:p-6 bg-white hover:bg-muted/50 transition-colors">
+                                                                  <div className="flex flex-col items-center gap-2 text-muted-foreground text-center">
                                                                     <UploadCloud size={24} />
-                                                                    <span className="text-sm font-medium">Click to upload {sec.type === 'video' ? 'video' : 'PDF'}</span>
+                                                                    <span className="text-xs sm:text-sm font-medium">Click to upload {sec.type === 'video' ? 'video' : 'PDF'}</span>
                                                                   </div>
                                                                   <input 
                                                                     type="file" 
@@ -493,7 +530,7 @@ function AdminCourseBuilderPage() {
                                             )}
                                           </Droppable>
 
-                                          <button onClick={() => addSection(mIndex)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-white py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                          <button onClick={() => addSection(mIndex)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-white py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                                             <Plus size={16} /> Add Section
                                           </button>
                                         </div>
@@ -616,6 +653,23 @@ function TabButton({ icon: Icon, label, active, onClick }: { icon: any; label: s
     >
       <Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
       {label}
+    </button>
+  );
+}
+
+function MobileTabPill({ active, onClick, icon: Icon, label }: any) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
+        active 
+          ? "bg-primary text-white shadow-sm" 
+          : "bg-[#F1F5F9] text-muted-foreground hover:bg-muted hover:text-foreground"
+      }`}
+    >
+      <Icon size={14} />
+      <span>{label}</span>
     </button>
   );
 }

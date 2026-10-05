@@ -1,74 +1,47 @@
+import { useState } from "react";
 import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import { getEnrolledCoursesFn } from "../actions/courses";
-
+import { StudentSidebar } from "@/components/StudentSidebar";
 
 import { Logo } from "@/components/ui/logo";
 import {
-  LayoutGrid,
-  Activity,
-  Bookmark,
-  BookOpen,
-  HelpCircle,
-  Trophy,
-  Calendar,
-  Briefcase,
-  DollarSign,
-  Headphones,
-  Settings,
   Search,
   Bell,
-  Crown,
-  BookOpen as BookOpenIcon
+  BookOpen as BookOpenIcon,
+  Menu,
 } from "lucide-react";
 
 function StudentCoursesPage() {
+  const { user } = Route.useRouteContext();
   const courses = Route.useLoaderData();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen w-full bg-[#F8FAFC]">
-      {/* Left Sidebar (Hidden on Mobile) */}
-      <aside className="hidden w-[250px] shrink-0 flex-col border-r border-border bg-white lg:flex sticky top-0 h-screen">
-        <div className="flex h-20 items-center px-6">
-          <Logo />
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <nav className="space-y-1">
-            <SidebarItem icon={LayoutGrid} label="Home" to="/dashboard" />
-            <SidebarItem icon={Activity} label="My Skill Graph" />
-            <SidebarItem icon={Bookmark} label="Bookmarks" />
-            <div className="my-4" />
-            <SidebarItem icon={BookOpen} label="Courses" to="/student-courses" active />
-            <SidebarItem icon={HelpCircle} label="Assessment" />
-            <div className="my-4" />
-            <SidebarItem icon={Headphones} label="Support" />
-            <SidebarItem icon={Settings} label="Settings" />
-          </nav>
-        </div>
-        <div className="p-4">
-          <div className="rounded-2xl bg-[#F1F5F9] p-5">
-            <div className="mb-2 flex items-center justify-between">
-              <h4 className="font-bold text-foreground">Go Premium!</h4>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-[#0066FF]">
-                <Crown size={16} />
-              </div>
-            </div>
-            <p className="mb-4 text-xs text-muted-foreground">
-              Explore All Course and challenges lifetime
-            </p>
-            <button className="w-full rounded-xl bg-gradient-blue py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90">
-              Get Access &rarr;
-            </button>
-          </div>
-        </div>
-      </aside>
+      {/* Sidebar (Desktop aside + Mobile Sheet) */}
+      <StudentSidebar
+        activeRoute="/student-courses"
+        mobileOpen={mobileOpen}
+        onMobileOpenChange={setMobileOpen}
+      />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto px-4 py-8 md:px-8 lg:px-10">
         <div className="mx-auto max-w-5xl">
           {/* Header */}
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-bold text-foreground">My Courses</h1>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-white text-muted-foreground transition-colors hover:bg-muted lg:hidden"
+                aria-label="Open navigation menu"
+              >
+                <Menu size={20} />
+              </button>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Courses</h1>
+            </div>
             
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
@@ -82,7 +55,7 @@ function StudentCoursesPage() {
               <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-white text-muted-foreground transition-colors hover:bg-muted">
                 <Bell size={18} />
               </button>
-              <ProfileDropdown seed="Raymond" role="student" />
+              <ProfileDropdown seed={user?.avatarSeed || user?.name || "Student"} role="student" />
             </div>
           </div>
 
@@ -120,30 +93,6 @@ function StudentCoursesPage() {
   );
 }
 
-function SidebarItem({ icon: Icon, label, active, to }: { icon: any; label: string; active?: boolean; to?: string }) {
-  const content = (
-    <>
-      <Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
-      {label}
-    </>
-  );
-
-  const className = `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
-    active
-      ? "bg-blue-50 text-primary"
-      : "text-muted-foreground hover:bg-[#F1F5F9] hover:text-foreground"
-  }`;
-
-  if (to) {
-    return <Link to={to} className={className}>{content}</Link>;
-  }
-
-  return (
-    <a href="#" className={className}>
-      {content}
-    </a>
-  );
-}
 
 function CourseGridCard({ category, title, author, lessons, rating, bg, linkTo, linkParams }: any) {
   return (

@@ -1,6 +1,7 @@
 import { Award, FileText, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { downloadSecureCertificateFn } from "../actions/courses";
+import { downloadHtmlAsPdf } from "../lib/pdfDownloader";
 import { toast } from "sonner";
 
 export function CertificateViewer({ 
@@ -32,26 +33,7 @@ export function CertificateViewer({
     try {
       setIsDownloading(true);
       const res = await downloadSecureCertificateFn({ data: { courseId: course.courseId } });
-      
-      // Decode base64 and trigger download
-      const binaryString = window.atob(res.base64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = res.filename;
-      document.body.appendChild(a);
-      a.click();
-      
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
+      await downloadHtmlAsPdf(res.html, res.filename, { landscape: true, width: 800, height: 566 });
       toast.success("Certificate downloaded successfully!");
     } catch (error: any) {
       console.error(error);

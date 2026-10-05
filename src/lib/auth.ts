@@ -7,6 +7,8 @@ export interface TokenPayload {
   userId: string;
   email: string;
   role: "student" | "admin";
+  name?: string;
+  avatarSeed?: string;
   tokenVersion?: number;
 }
 
@@ -33,6 +35,8 @@ export const getAuthSessionFn = createServerFn({ method: "GET" })
         userId: payload.userId,
         email: payload.email,
         role: payload.role,
+        name: user.name,
+        avatarSeed: user.avatarSeed,
         tokenVersion: payload.tokenVersion
       }, getJwtSecret(), { expiresIn: "2h" });
 
@@ -44,7 +48,14 @@ export const getAuthSessionFn = createServerFn({ method: "GET" })
         maxAge: 2 * 60 * 60 // 2 hours
       });
       
-      return payload;
+      return {
+        userId: payload.userId,
+        email: payload.email,
+        role: payload.role,
+        name: user.name,
+        avatarSeed: user.avatarSeed || user.name.replace(/\s+/g, ""),
+        tokenVersion: payload.tokenVersion
+      };
     } catch (error) {
       return null;
     }
@@ -83,6 +94,8 @@ export const loginFn = createServerFn({ method: "POST" })
         userId: user._id.toString(),
         email: user.email,
         role: user.role,
+        name: user.name,
+        avatarSeed: user.avatarSeed || user.name.replace(/\s+/g, ""),
         tokenVersion: user.tokenVersion || 0
       }, getJwtSecret(), { expiresIn: "2h" });
       

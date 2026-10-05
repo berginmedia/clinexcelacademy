@@ -43,17 +43,17 @@ export function QuizBuilder({ quiz, onChange, onSave, isSaving, title = "Final C
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-4xl mx-auto">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">{title}</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{description}</p>
         </div>
-        <button onClick={onSave} disabled={isSaving} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:bg-primary/90 disabled:opacity-50">
+        <button onClick={onSave} disabled={isSaving} className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:bg-primary/90 disabled:opacity-50 w-full sm:w-auto">
           <Save size={16} /> {isSaving ? "Saving..." : "Save Quiz"}
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="col-span-1 space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-border shadow-sm space-y-4">
             <div className="flex items-center gap-2 text-foreground font-bold pb-2 border-b">
@@ -80,7 +80,7 @@ export function QuizBuilder({ quiz, onChange, onSave, isSaving, title = "Final C
           </div>
         </div>
 
-        <div className="col-span-2 space-y-6">
+        <div className="col-span-1 lg:col-span-2 space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-border shadow-sm space-y-6">
             <div className="flex items-center justify-between pb-2 border-b">
               <div className="flex items-center gap-2 text-foreground font-bold">

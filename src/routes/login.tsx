@@ -204,7 +204,12 @@ function LoginPage() {
                     {course.desc}
                   </p>
                 </div>
-                <a href="#" className="text-[13px] font-semibold text-[#0066FF] hover:underline flex items-center gap-1">
+                <a 
+                  href={`https://wa.me/919909393649?text=${encodeURIComponent(`Hi, I would like to enroll in "${course.title}".`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[13px] font-semibold text-[#0066FF] hover:underline flex items-center gap-1"
+                >
                   Enroll <span className="text-lg leading-none">&rarr;</span>
                 </a>
               </div>

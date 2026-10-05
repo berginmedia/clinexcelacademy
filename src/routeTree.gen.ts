@@ -17,6 +17,7 @@ import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as StudentCoursesRouteImport } from './routes/student-courses'
+import { Route as TranscriptRouteImport } from './routes/transcript'
 import { Route as AdminCourseBuilderCourseIdRouteImport } from './routes/admin-course-builder.$courseId'
 import { Route as AdminStudentProfileStudentIdRouteImport } from './routes/admin-student-profile.$studentId'
 import { Route as CourseCourseIdRouteImport } from './routes/course.$courseId'
@@ -61,6 +62,11 @@ const StudentCoursesRoute = StudentCoursesRouteImport.update({
   path: '/student-courses',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TranscriptRoute = TranscriptRouteImport.update({
+  id: '/transcript',
+  path: '/transcript',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCourseBuilderCourseIdRoute =
   AdminCourseBuilderCourseIdRouteImport.update({
     id: '/admin-course-builder/$courseId',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/student-courses': typeof StudentCoursesRoute
+  '/transcript': typeof TranscriptRoute
   '/admin-course-builder/$courseId': typeof AdminCourseBuilderCourseIdRoute
   '/admin-student-profile/$studentId': typeof AdminStudentProfileStudentIdRoute
   '/course/$courseId': typeof CourseCourseIdRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/student-courses': typeof StudentCoursesRoute
+  '/transcript': typeof TranscriptRoute
   '/admin-course-builder/$courseId': typeof AdminCourseBuilderCourseIdRoute
   '/admin-student-profile/$studentId': typeof AdminStudentProfileStudentIdRoute
   '/course/$courseId': typeof CourseCourseIdRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/student-courses': typeof StudentCoursesRoute
+  '/transcript': typeof TranscriptRoute
   '/admin-course-builder/$courseId': typeof AdminCourseBuilderCourseIdRoute
   '/admin-student-profile/$studentId': typeof AdminStudentProfileStudentIdRoute
   '/course/$courseId': typeof CourseCourseIdRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/student-courses'
+    | '/transcript'
     | '/admin-course-builder/$courseId'
     | '/admin-student-profile/$studentId'
     | '/course/$courseId'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/student-courses'
+    | '/transcript'
     | '/admin-course-builder/$courseId'
     | '/admin-student-profile/$studentId'
     | '/course/$courseId'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/student-courses'
+    | '/transcript'
     | '/admin-course-builder/$courseId'
     | '/admin-student-profile/$studentId'
     | '/course/$courseId'
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   StudentCoursesRoute: typeof StudentCoursesRoute
+  TranscriptRoute: typeof TranscriptRoute
   AdminCourseBuilderCourseIdRoute: typeof AdminCourseBuilderCourseIdRoute
   AdminStudentProfileStudentIdRoute: typeof AdminStudentProfileStudentIdRoute
   CourseCourseIdRoute: typeof CourseCourseIdRoute
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentCoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/transcript': {
+      id: '/transcript'
+      path: '/transcript'
+      fullPath: '/transcript'
+      preLoaderRoute: typeof TranscriptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-course-builder/$courseId': {
       id: '/admin-course-builder/$courseId'
       path: '/admin-course-builder/$courseId'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   StudentCoursesRoute: StudentCoursesRoute,
+  TranscriptRoute: TranscriptRoute,
   AdminCourseBuilderCourseIdRoute: AdminCourseBuilderCourseIdRoute,
   AdminStudentProfileStudentIdRoute: AdminStudentProfileStudentIdRoute,
   CourseCourseIdRoute: CourseCourseIdRoute,
